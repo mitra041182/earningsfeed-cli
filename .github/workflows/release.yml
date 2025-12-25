@@ -401,6 +401,69 @@ jobs:
         run: |
           choco push choco/earningsfeed.${{ steps.version.outputs.version }}.nupkg --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
 
+  publish-scoop:
+    needs:
+      - plan
+      - host
+    runs-on: ubuntu-latest
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - name: Get version from tag
+        id: version
+        run: |
+          VERSION="${{ needs.plan.outputs.tag }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Download ZIP checksum
+        run: |
+          curl -sL "https://github.com/earningsfeed/earningsfeed-cli/releases/download/${{ needs.plan.outputs.tag }}/earningsfeed-cli-x86_64-pc-windows-msvc.zip.sha256" -o zip.sha256
+          HASH=$(cat zip.sha256 | awk '{print $1}')
+          echo "HASH=$HASH" >> "$GITHUB_ENV"
+      - name: Checkout Scoop bucket
+        uses: actions/checkout@v4
+        with:
+          repository: earningsfeed/scoop-earningsfeed
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+      - name: Update manifest
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          jq --arg version "$VERSION" \
+             --arg hash "$HASH" \
+             --arg url "https://github.com/earningsfeed/earningsfeed-cli/releases/download/v$VERSION/earningsfeed-cli-x86_64-pc-windows-msvc.zip" \
+             '.version = $version | .hash = $hash | .url = $url' \
+             bucket/earningsfeed.json > bucket/earningsfeed.json.tmp
+          mv bucket/earningsfeed.json.tmp bucket/earningsfeed.json
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bucket/earningsfeed.json
+          git commit -m "Update earningsfeed to ${{ steps.version.outputs.version }}"
+          git push
+
+  publish-winget:
+    needs:
+      - plan
+      - host
+    runs-on: windows-latest
+    if: ${{ !fromJson(needs.plan.outputs.val).announcement_is_prerelease || fromJson(needs.plan.outputs.val).publish_prereleases }}
+    steps:
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ needs.plan.outputs.tag }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Submit to WinGet
+        uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifier: EarningsFeed.earningsfeed-cli
+          installers-regex: '\.msi$'
+          version: ${{ steps.version.outputs.version }}
+          release-tag: ${{ needs.plan.outputs.tag }}
+          token: ${{ secrets.WINGET_TOKEN }}
+
   announce:
     needs:
       - plan
@@ -408,10 +471,12 @@ jobs:
       - publish-crates
       - publish-homebrew-formula
       - publish-chocolatey
+      - publish-scoop
+      - publish-winget
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
-    if: ${{ always() && needs.host.result == 'success' && (needs.publish-crates.result == 'skipped' || needs.publish-crates.result == 'success') && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') && (needs.publish-chocolatey.result == 'skipped' || needs.publish-chocolatey.result == 'success') }}
+    if: ${{ always() && needs.host.result == 'success' && (needs.publish-crates.result == 'skipped' || needs.publish-crates.result == 'success') && (needs.publish-homebrew-formula.result == 'skipped' || needs.publish-homebrew-formula.result == 'success') && (needs.publish-chocolatey.result == 'skipped' || needs.publish-chocolatey.result == 'success') && (needs.publish-scoop.result == 'skipped' || needs.publish-scoop.result == 'success') && (needs.publish-winget.result == 'skipped' || needs.publish-winget.result == 'success') }}
     runs-on: "ubuntu-22.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
