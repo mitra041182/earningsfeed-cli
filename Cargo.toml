@@ -1,6 +1,6 @@
 [package]
 name = "earningsfeed-cli"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 authors = ["Earnings Feed <support@earningsfeed.com>"]
 description = "CLI for the EarningsFeed API - SEC filings, insider transactions, and institutional holdings"
